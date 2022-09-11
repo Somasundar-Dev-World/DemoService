@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-first-deployment
+  labels:
+    app: k8s-first-deployment
+spec:
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: k8s-first-deployment
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
+  template:
+    metadata:
+      labels:
+        app: k8s-first-deployment
+        tier: service
+    spec:
+      containers:
+      - name: k8s-first-deployment
+        image: somasundar/demoservice:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-first-deployment
+  labels:
+    app: k8s-first-deployment
+    tier: service
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: k8s-first-deployment
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: k8s-first-deployment
+  labels:
+    app: k8s-first-deployment
+    tier: backend
+spec:
+  backend:
+    serviceName: k8s-first-deployment
+    servicePort: 8080
